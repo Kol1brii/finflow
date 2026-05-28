@@ -115,13 +115,13 @@ def add_expense(wallet_number: str, request: OperationRequest, db: Session = Dep
     wallet = db.scalars(statement).one_or_none()
     if wallet is None:
         raise HTTPException(404, f"Wallet '{wallet_number}' not found")
-    if wallet.balance <= request.amount:
+    if wallet.balance < request.amount:
         raise HTTPException(400, f"Insufficient funds")
     wallet.balance -= request.amount
     db.commit()
 
     return {
-        "status": f"Credited {request.amount}",
+        "status": f"Debited {request.amount}",
         "wallet_id": wallet.id,
         "amount": request.amount,
         "description": request.description,
