@@ -61,6 +61,8 @@ finflow/
 │   │   ├── __init__.py
 │   │   └── luhn.py
 │   └── __init__.py
+├── docs/
+│   └── swagger-demo.png
 ├── tests/
 ├── .env.example
 ├── .gitignore
@@ -93,9 +95,15 @@ copy .env.example .env  # Windows
 docker compose up --build
 ```
 
-The API will be available at: http://localhost:8000
-Interactive Swagger docs: http://localhost:8000/docs
-ReDoc: http://localhost:8000/redoc
+- The API will be available at: http://localhost:8000
+- Interactive Swagger docs: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## 🔮 Planned Improvements
+- [X] To complete the database with the transaction history
+- [ ] Complete the transaction system
+- [ ] Add unit and integration tests (pytest)
+- [ ] Switch to async SQLAlchemy (asyncpg)
 
 ## API Endpoints
 

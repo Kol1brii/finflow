@@ -24,7 +24,7 @@ class WalletsORM(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     wallet_number: Mapped[str] = mapped_column(String(16), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(32))
-    balance: Mapped[Decimal] = mapped_column(Numeric(scale=2), default=Decimal("0.00"))
+    balance: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), default=Decimal("0.00"))
     transactions: Mapped[list["TransactionsHistoryORM"]] = relationship(back_populates="wallet")
 
 class TransactionsHistoryORM(Base):
@@ -33,9 +33,9 @@ class TransactionsHistoryORM(Base):
     wallet_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("all_wallets.id"))
     status: Mapped[str] = mapped_column(String(50))
     amount: Mapped[Decimal] = mapped_column(Numeric(scale=2))
-    description: Mapped[str] = mapped_column(String(100))
-    balance: Mapped[Decimal] = mapped_column(Numeric(scale=2), default=Decimal("0.00"))
-    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    description: Mapped[str | None] = mapped_column(String(100), default=None)
+    balance: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), default=Decimal("0.00"))
+    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.date_trunc('second', func.now()))
     wallet: Mapped["WalletsORM"] = relationship(back_populates="transactions")
 
 def get_db():

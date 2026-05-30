@@ -1,5 +1,7 @@
-from fastapi import APIRouter
-from .wallets import TRANSACTION_HISTORY
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from ..database.connection import TransactionsHistoryORM, get_db
+from sqlalchemy import select
 
 router = APIRouter(
     prefix="/transactions",
@@ -7,5 +9,6 @@ router = APIRouter(
 )
 
 @router.get("/")
-def check_transactions():
-    return TRANSACTION_HISTORY
+def check_transactions(db: Session = Depends(get_db)):
+    transactions = db.scalars(select(TransactionsHistoryORM)).all()
+    return transactions

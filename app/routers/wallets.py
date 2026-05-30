@@ -1,29 +1,20 @@
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field, condecimal
+from pydantic import BaseModel, Field
 from decimal import Decimal
 from sqlalchemy import select
-
-from sentry_sdk.session import Session
 from sqlalchemy.orm import Session
-
-from app.utils.luhn import generate_luhn_number, validate_luhn
+from app.utils.luhn import generate_luhn_number
 import uuid
-
-from ..database.connection import get_db, WalletsORM
+from ..database.connection import get_db, WalletsORM, TransactionsHistoryORM
 
 router = APIRouter(prefix="/wallets", tags=["wallets"])
-
-TRANSACTION_HISTORY = []   # История транзакций
 
 class WalletCreateRequest(BaseModel):
     name: str
     balance: Decimal | None = 0
 
 class WalletResponse(BaseModel):  # Pydantic класс
-    status: str | None = None
-    wallet_id: uuid.UUID
+    id: uuid.UUID
     wallet_number: str = Field(min_length=16, max_length=16, pattern=r"^\d{16}$") # Валидация номера карты в диапазоне 16 символов с паттерном
     name: str
     balance: Decimal   # Аналог Float, но без мелкой погрешности в результате
@@ -34,7 +25,6 @@ class WalletResponse(BaseModel):  # Pydantic класс
 class OperationRequest(BaseModel):  # Класс для валидации интервала прибавленной суммы amount в функции receive_money
     amount: Decimal = Field(default=None, gt=0, le=100_000)
     description: str | None = None
-    date: datetime
 
 
 
@@ -50,21 +40,14 @@ def create_wallet(create: WalletCreateRequest, db: Session = Depends(get_db)):
     )
     db.add(wallet)
     db.commit()
-
-    return WalletResponse(
-        status=f"wallet '{create.name}' created",
-        wallet_id=new_wallet_id,
-        wallet_number= new_wallet_number,
-        name= create.name,
-        balance=create.balance
-    )
+    return wallet
 
 @router.get("/all_wallets")
 def check_wallets(db: Session = Depends(get_db)):
     wallets_from_db = db.scalars(select(WalletsORM)).all()
     return wallets_from_db
 
-@router.get("/{wallet_number}/balance", response_model=WalletResponse)
+@router.get("/{wallet_number}/balance")
 def check_balance(wallet_number: str, db: Session = Depends(get_db)):
     statement = (   # Синтаксический сахар
         select(WalletsORM)
@@ -74,13 +57,7 @@ def check_balance(wallet_number: str, db: Session = Depends(get_db)):
     wallet = db.scalars(statement).one_or_none()
     if wallet is None:
         raise HTTPException(404, f"Wallet '{wallet_number}' not found")
-    return WalletResponse(
-        status=None,
-        wallet_id=wallet.id,
-        wallet_number=wallet_number,
-        name= wallet.name,
-        balance=wallet.balance
-    )
+    return wallet.balance
 
 @router.post("/{wallet_number}/income")
 def add_income(wallet_number: str, request: OperationRequest, db: Session = Depends(get_db)):
@@ -89,11 +66,23 @@ def add_income(wallet_number: str, request: OperationRequest, db: Session = Depe
         .where(WalletsORM.wallet_number == wallet_number)
         .with_for_update()
     )
+
     wallet = db.scalars(statement).one_or_none()
     if wallet is None:
         raise HTTPException(404, f"Wallet '{wallet_number}' not found")
     wallet.balance += request.amount
+
+    transaction_log = TransactionsHistoryORM(
+        wallet_id=wallet.id,
+        status="add income",
+        amount=request.amount,
+        description=request.description,
+        balance=wallet.balance
+    )
+
+    db.add(transaction_log)
     db.commit()
+    db.refresh(transaction_log)
 
     return {
             "status": f"Credited {request.amount}",
@@ -101,9 +90,8 @@ def add_income(wallet_number: str, request: OperationRequest, db: Session = Depe
             "amount": request.amount,
             "description": request.description,
             "Total amount": wallet.balance,
-            "date": request.date.isoformat(),
+            "date": transaction_log.date.isoformat(),
         }
-
 
 @router.post("/{wallet_number}/expense")
 def add_expense(wallet_number: str, request: OperationRequest, db: Session = Depends(get_db)):
@@ -112,19 +100,29 @@ def add_expense(wallet_number: str, request: OperationRequest, db: Session = Dep
         .where(WalletsORM.wallet_number == wallet_number)
         .with_for_update()
     )
+
     wallet = db.scalars(statement).one_or_none()
     if wallet is None:
         raise HTTPException(404, f"Wallet '{wallet_number}' not found")
-    if wallet.balance < request.amount:
-        raise HTTPException(400, f"Insufficient funds")
     wallet.balance -= request.amount
+
+    transaction_log = TransactionsHistoryORM(
+        wallet_id=wallet.id,
+        status="add expense",
+        amount=request.amount,
+        description=request.description,
+        balance=wallet.balance
+    )
+
+    db.add(transaction_log)
     db.commit()
+    db.refresh(transaction_log)
 
     return {
-        "status": f"Debited {request.amount}",
+        "status": f"Credited {request.amount}",
         "wallet_id": wallet.id,
         "amount": request.amount,
         "description": request.description,
         "Total amount": wallet.balance,
-        "date": request.date.isoformat(),
+        "date": transaction_log.date.isoformat(),
     }
