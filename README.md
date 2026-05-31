@@ -24,7 +24,7 @@ Built as a portfolio project to demonstrate backend development skills.
 
 ## ✨ Features
 
-- **Wallet Management** — create wallets with unique 16-digit card numbers
+- **Wallet Management** — create wallets with unique 16-digit wallet numbers
 - **Balance Check** — get current balance by card number  
 - **Income Transactions** — deposit funds with description
 - **Expense Transactions** — withdraw funds with insufficient balance protection
@@ -32,6 +32,7 @@ Built as a portfolio project to demonstrate backend development skills.
 - **Concurrency Safety** — SELECT FOR UPDATE prevents race conditions
 - **Transaction History** — all operations stored in PostgreSQL
 - **Docker Ready** — deploy with single command
+- - **Layered Architecture** — routers, services, schemas separated
 
 ## 🛠️ Tech Stack
 
@@ -60,11 +61,12 @@ finflow/
 │   │   └── transactions.py
 │   ├── schemas/
 │   │   ├── __init__.py
+│   │   ├── transactions.py
 │   │   └── wallets.py
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── wallets.py
-│   │   └── transactions.py
+│   │   ├── transactions.py
+│   │   └── wallets.py
 │   └── utils/
 │       ├── __init__.py
 │       └── luhn.py
@@ -124,9 +126,10 @@ docker compose up --build
 | `POST` | `/wallets/{wallet_number}/expense`    | Add expense           | 200    |
 
 ### Transactions
-| Method | Endpoint         | Description               | Status |
-|--------|------------------|---------------------------|--------|
-| `GET`  | `/transactions`  | Check transaction history | 200    |
+| Method | Endpoint                 | Description               | Status |
+|--------|--------------------------|---------------------------|--------|
+| `GET`  | `/transactions`          | Check transaction history | 200    |
+| `POST` | `/transactions/transfer` | transfers between wallets | 201    |
 
 ### Request & Response Examples
 
@@ -301,6 +304,30 @@ docker compose up --build
   }
 ]
 ```
+</details> 
+<details>
+<summary>GET /transactions/transfer</summary>
+
+**Response `201`:**
+
+```json
+{
+  "from_wallet_id": "550e8400-e29b-41d4-a716-446655440000",
+  "to_wallet_id": "661f9511-f30c-52e5-b827-557766551111",
+  "from_wallet_number": "4532015112830366",
+  "to_wallet_number": "7319876294051093",
+  "amount": "200",
+  "description": "coffee"
+}
+```
+**Response `400`:**
+	
+```json
+{
+  "detail": "Insufficient funds for this operation"
+}
+```
+</details>
 
 ## Database Schema
 

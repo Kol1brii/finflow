@@ -21,10 +21,12 @@ class WalletService:
         db.commit()
         return wallet
 
+    @staticmethod
     def check_wallets(db: Session):
         wallets_from_db = db.scalars(select(WalletsORM)).all()
         return wallets_from_db
 
+    @staticmethod
     def check_balance(wallet_number: str, db: Session):
         statement = (  # Синтаксический сахар
             select(WalletsORM)
@@ -36,6 +38,7 @@ class WalletService:
             raise HTTPException(404, f"Wallet '{wallet_number}' not found")
         return wallet.balance
 
+    @staticmethod
     def add_income(wallet_number: str, request: OperationRequest, db: Session):
         statement = (  # Синтаксический сахар
             select(WalletsORM)
@@ -64,12 +67,13 @@ class WalletService:
         return {
             "status": f"Credited {request.amount}",
             "wallet_id": str(wallet.id),
-            "amount": request.amount,
+            "amount": -request.amount,
             "description": request.description,
             "Total amount": wallet.balance,
             "date": transaction_log.date.isoformat(),
         }
 
+    @staticmethod
     def add_expense(wallet_number: str, request: OperationRequest, db: Session):
         statement = (  # Синтаксический сахар
             select(WalletsORM)
@@ -89,7 +93,7 @@ class WalletService:
         transaction_log = TransactionsHistoryORM(
             wallet_id=wallet.id,
             status="add expense",
-            amount=request.amount,
+            amount=-request.amount,
             description=request.description,
             balance=wallet.balance
         )
@@ -101,7 +105,7 @@ class WalletService:
         return {
             "status": f"Credited {request.amount}",
             "wallet_id": str(wallet.id),
-            "amount": request.amount,
+            "amount": -request.amount,
             "description": request.description,
             "Total amount": wallet.balance,
             "date": transaction_log.date.isoformat(),
