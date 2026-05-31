@@ -50,6 +50,7 @@ Built as a portfolio project to demonstrate backend development skills.
 
 ```text
 finflow/
+├── .venv/
 ├── app/
 │   ├── database/
 │   │   ├── __init__.py
@@ -57,20 +58,26 @@ finflow/
 │   ├── routers/
 │   │   ├── wallets.py
 │   │   └── transactions.py
-│   ├── utils/
+│   ├── schemas/
 │   │   ├── __init__.py
-│   │   └── luhn.py
-│   └── __init__.py
+│   │   └── wallets.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── wallets.py
+│   │   └── transactions.py
+│   └── utils/
+│       ├── __init__.py
+│       └── luhn.py
 ├── docs/
 │   └── swagger-demo.png
 ├── tests/
+├── .env
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
 ├── Dockerfile
 ├── main.py
-├── requirements.txt
-└── README.md
+└── requirements.txt
 ```
 
 ## 🚀 Getting Started
@@ -116,8 +123,14 @@ docker compose up --build
 | `POST` | `/wallets/{wallet_number}/income`     | Add income            | 200    |
 | `POST` | `/wallets/{wallet_number}/expense`    | Add expense           | 200    |
 
+### Transactions
+| Method | Endpoint         | Description               | Status |
+|--------|------------------|---------------------------|--------|
+| `GET`  | `/transactions`  | Check transaction history | 200    |
+
 ### Request & Response Examples
 
+#### Wallets
 <details>
 <summary>POST /wallets/create_wallet</summary>
 
@@ -258,6 +271,36 @@ docker compose up --build
 ]
 ```
 </details>
+
+#### Transactions
+
+<details>
+<summary>GET /transactions</summary>
+
+**Response `200`:**
+
+```json
+[
+  {
+    "id": "111e8400-e29b-41d4-a716-446655441111",
+    "wallet_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "add income",
+    "amount": 500.00,
+    "description": "Salary",
+    "balance": 1500.00,
+    "date": "2026-05-30T17:52:35"
+  },
+  {
+    "id": "222e8400-e29b-41d4-a716-446655442222",
+    "wallet_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "add expense",
+    "amount": 200.00,
+    "description": "Groceries",
+    "balance": 1300.00,
+    "date": "2026-05-30T18:15:00"
+  }
+]
+```
 
 ## Database Schema
 
