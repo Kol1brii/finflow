@@ -85,6 +85,7 @@ finflow/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - [Docker](https://docs.docker.com/get-docker/) & Docker Compose installed
 - Docker Desktop running (Windows/macOS)
 
@@ -104,19 +105,14 @@ copy .env.example .env  # Windows
 docker compose up --build
 ```
 
-- The API will be available at: http://localhost:8000
-- Interactive Swagger docs: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## 🔮 Planned Improvements
-- [X] To complete the database with the transaction history
-- [ ] Complete the transaction system
-- [ ] Add unit and integration tests (pytest)
-- [ ] Switch to async SQLAlchemy (asyncpg)
+- The API will be available at: <http://localhost:8000>
+- Interactive Swagger docs: <http://localhost:8000/docs>
+- ReDoc: <http://localhost:8000/redoc>
 
 ## API Endpoints
 
 ### Wallets
+
 | Method | Endpoint                              | Description           | Status |
 |--------|---------------------------------------|-----------------------|--------|
 | `POST` | `/wallets/create_wallet`              | Create a new wallet   | 201    |
@@ -126,6 +122,7 @@ docker compose up --build
 | `POST` | `/wallets/{wallet_number}/expense`    | Add expense           | 200    |
 
 ### Transactions
+
 | Method | Endpoint                 | Description               | Status |
 |--------|--------------------------|---------------------------|--------|
 | `GET`  | `/transactions`          | Check transaction history | 200    |
@@ -134,6 +131,7 @@ docker compose up --build
 ### Request & Response Examples
 
 #### Wallets
+
 <details>
 <summary>POST /wallets/create_wallet</summary>
 
@@ -157,6 +155,7 @@ docker compose up --build
   "balance": 1000.00
 }
 ```
+
 </details>
 
 <details>
@@ -184,6 +183,7 @@ docker compose up --build
   "date": "2025-01-01T12:00:00"
 }
 ```
+
 </details>
 
 <details>
@@ -227,6 +227,7 @@ docker compose up --build
   "detail": "Wallet '1234567890123456' not found"
 }
 ```
+
 </details>
 
 <details>
@@ -250,6 +251,7 @@ docker compose up --build
   "detail": "Wallet '1234567890123456' not found"
 }
 ```
+
 </details>
 
 <details>
@@ -273,6 +275,7 @@ docker compose up --build
   }
 ]
 ```
+
 </details>
 
 #### Transactions
@@ -304,7 +307,8 @@ docker compose up --build
   }
 ]
 ```
-</details> 
+
+</details>
 <details>
 <summary>GET /transactions/transfer</summary>
 
@@ -320,18 +324,21 @@ docker compose up --build
   "description": "coffee"
 }
 ```
+
 **Response `400`:**
-	
+ 
 ```json
 {
   "detail": "Insufficient funds for this operation"
 }
 ```
+
 </details>
 
 ## Database Schema
 
 ### `all_wallets`
+
 | Column          | Type           | Description                    |
 |-----------------|----------------|--------------------------------|
 | `id`            | UUID (PK)      | Unique wallet identifier       |
@@ -340,6 +347,7 @@ docker compose up --build
 | `balance`       | NUMERIC(12, 2) | Current balance                |
 
 ### `transactions_history`
+
 | Column      | Type           | Description                        |
 |-------------|----------------|------------------------------------|
 | `id`        | UUID (PK)      | Unique transaction identifier      |
